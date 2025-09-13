@@ -3,9 +3,9 @@
 Personal dotfiles for my Wayland/Sway setup on Arch (also tested on Debian & Fedora).  
 Includes configs for **sway**, **waybar**, **wofi**, **wlogout**, **Neovim**, **ranger**, **kitty**, **GTK (3/4)**, **udiskie**, **systemd --user services**, and handy **bin** scripts.
 
-![Terminal](screenshots/image-terminal.png)
-
 ![Ranger](screenshots/image-ranger.png)
+
+![Terminal](screenshots/image-terminal.png)
 
 ---
 
