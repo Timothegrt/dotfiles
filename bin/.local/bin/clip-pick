@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Liste anzeigen (rofi, sonst wofi). Abbruch → nichts tun.
 choice=$(cliphist list | { command -v rofi &>/dev/null \
   && rofi -dmenu -p "Clipboard" \
   || wofi --dmenu -p "Clipboard"; } || true)
 [ -z "${choice:-}" ] && exit 0
-# Auswahl ins Clipboard zurückschreiben
+
 printf '%s\n' "$choice" | cliphist decode | wl-copy

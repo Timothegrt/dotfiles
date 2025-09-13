@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOW_THRESH="${LOW_THRESH:-15}"   # % für Low-Battery
+LOW_THRESH="${LOW_THRESH:-15}"   # for low bat
 THEME_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/sounds/macOS-ish/stereo"
 
 play_file() {
@@ -51,5 +51,5 @@ monitor() {
 }
 
 wait_upower
-# einmal initial einlesen (kein Ton), dann nur Events:
+
 monitor
