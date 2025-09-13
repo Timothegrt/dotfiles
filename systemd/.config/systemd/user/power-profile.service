@@ -1,0 +1,16 @@
+[Unit]
+Description=Auto switch power-profiles (AC/Battery)
+After=graphical-session.target upower.service
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+# Defaults: AC=balanced, BAT=power-saver – hier anpassbar:
+Environment=AC_PROFILE=balanced
+Environment=BAT_PROFILE=power-saver
+ExecStart=%h/.local/bin/power-profile-autoswitch
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

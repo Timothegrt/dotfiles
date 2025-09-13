@@ -1,0 +1,10 @@
+[Unit]
+Description=USB plug/unplug sounds
+After=graphical-session.target pipewire.service wireplumber.service
+
+[Service]
+ExecStart=%h/.local/bin/usb-sound-monitor
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

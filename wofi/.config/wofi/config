@@ -1,0 +1,4 @@
+allow_images=true
+image_size=24
+prompt=Run:
+show=drun

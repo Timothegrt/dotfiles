@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Config (can be overridden by env)
+CHEATDIR="${CHEATDIR:-$HOME/Documents/Cheatsheets}"
+EDITOR_CMD="${EDITOR_CMD:-nvim}"
+TERMINAL_CMD="${TERMINAL_CMD:-kitty}"
+MAXDEPTH="${MAXDEPTH:-3}"
+EXTS="${EXTS:-md|txt|rst}"   # pipe-separated list
+
+err() { printf "cheatsheets-rofi: %s\n" "$*" >&2; }
+
+# Ensure cheatdir exists
+if [ ! -d "$CHEATDIR" ]; then
+  err "Directory not found: $CHEATDIR"
+  exit 1
+fi
+
+# Collect files relative to CHEATDIR (up to MAXDEPTH, matching EXTS)
+mapfile -t entries < <(find "$CHEATDIR" -maxdepth "$MAXDEPTH" -type f \
+  \( -iregex ".*\.\($(echo "$EXTS" | sed 's/|/\\|/g')\)$" \) \
+  -printf '%P\n' | sort -f)
+
+if [ "${#entries[@]}" -eq 0 ]; then
+  err "No files matching *.{${EXTS//|/, }} found in $CHEATDIR (depth $MAXDEPTH)"
+  exit 1
+fi
+
+# Pick a launcher (prefer rofi; fallback to wofi)
+pick_cmd=""
+if command -v rofi >/dev/null 2>&1; then
+  pick_cmd='rofi -dmenu -i -p Cheatsheet'
+elif command -v wofi >/dev/null 2>&1; then
+  pick_cmd='wofi --dmenu -i -p Cheatsheet'
+else
+  err "Need 'rofi' or 'wofi' installed."
+  exit 1
+fi
+
+# Show menu
+selection="$(printf '%s\n' "${entries[@]}" | bash -lc "$pick_cmd")" || true
+[ -n "${selection:-}" ] || exit 0
+
+# Resolve to full path and sanity-check
+filepath="$CHEATDIR/$selection"
+if [ ! -f "$filepath" ]; then
+  err "Selected file not found: $filepath"
+  exit 1
+fi
+
+# Choose a terminal to open nvim
+terminal="$TERMINAL_CMD"
+if ! command -v "${terminal%% *}" >/dev/null 2>&1; then
+  if command -v kitty >/dev/null 2>&1; then
+    terminal="kitty"
+  elif command -v footclient >/dev/null 2>&1; then
+    terminal="footclient"
+  elif command -v foot >/dev/null 2>&1; then
+    terminal="foot"
+  elif command -v alacritty >/dev/null 2>&1; then
+    terminal="alacritty"
+  elif command -v wezterm >/dev/null 2>&1; then
+    terminal="wezterm"
+  else
+    err "No suitable terminal found. Set TERMINAL_CMD env (e.g., kitty/foot/alacritty)."
+    exit 1
+  fi
+fi
+
+# Launch editor in terminal
+exec $terminal -e "$EDITOR_CMD" "$filepath"
