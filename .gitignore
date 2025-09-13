@@ -1,0 +1,9 @@
+# Editor/OS
+*~
+.DS_Store
+Thumbs.db
+
+# Caches
+.cache/
+__pycache__/
+*.swp
