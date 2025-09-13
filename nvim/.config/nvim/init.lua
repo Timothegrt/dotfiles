@@ -1,17 +1,17 @@
--- Minimal NVIM mit Completion + Autopairs + Statusline + Tim-Theme
+-- Minimal Neovim configuration: completion, autopairs, statusline, and custom theme.
+-- All comments written in English for publication.
 
--- ---------- Palette (deine + dezent abgeleitet) ----------
+-- ---------- Color Palette ----------
+-- Base UI + derived syntax colors aligned to a calm, dark aesthetic.
 local C = {
   red    = "#a14040",
   green  = "#6aaa64",
-  orange = "#df970d",      -- Normal-Mode / Akzente
+  orange = "#df970d",      -- Normal mode / accents
   pink   = "#b16286",
   fg     = "#bec1bf",
-  bg     = "#2a2a2a",      -- dark background (nicht zu schwarz)
-  bg2    = "#333333",      -- CursorLine / Float
-  dim    = "#222222",      -- Border/Darker
-
-  -- Abgeleitet, passend zur Palette (für „bat“-artige Syntaxbalance)
+  bg     = "#2a2a2a",      -- Dark background (not absolute black)
+  bg2    = "#333333",      -- CursorLine / floating windows
+  dim    = "#222222",      -- Borders / darker areas
   cyan   = "#64aaaa",
   purple = "#9762b1",
   blue   = "#6289b1",
@@ -24,11 +24,11 @@ vim.opt.number = true
 vim.opt.relativenumber = false
 vim.opt.cursorline = true
 
--- ---------- sehr kleines Colorscheme (+ Treesitter-Links) ----------
+-- ---------- Minimal Inline Colorscheme (with Treesitter links) ----------
 local function apply_colors()
   local hl = vim.api.nvim_set_hl
 
-  -- UI
+  -- Core UI groups
   hl(0, "Normal",         { fg=C.fg, bg=C.bg })
   hl(0, "NormalFloat",    { fg=C.fg, bg=C.bg2 })
   hl(0, "FloatBorder",    { fg=C.dim, bg=C.bg2 })
@@ -45,7 +45,7 @@ local function apply_colors()
   hl(0, "StatusLineNC",   { fg="#9e9e9e", bg=C.dim })
   hl(0, "WinSeparator",   { fg=C.dim, bg=C.bg })
 
-  -- „bat default“-artige Syntax (in deiner Palette)
+  -- Basic syntax groups inspired by a balanced "bat" style
   hl(0, "Comment",        { fg=C.comment, italic=true })
   hl(0, "SpecialComment", { fg=C.comment, italic=true })
   hl(0, "Todo",           { fg="#000000", bg=C.yellow, bold=true })
@@ -82,7 +82,7 @@ local function apply_colors()
   hl(0, "Delimiter",      { fg=C.fg })
   hl(0, "MatchParen",     { fg=C.yellow, bold=true, underline=true })
 
-  -- Diagnostics (falls LSP im Einsatz)
+  -- LSP / diagnostics (in case an LSP attaches)
   hl(0, "DiagnosticError",{ fg=C.red })
   hl(0, "DiagnosticWarn", { fg=C.orange })
   hl(0, "DiagnosticInfo", { fg=C.blue })
@@ -92,7 +92,7 @@ local function apply_colors()
   hl(0, "DiagnosticUnderlineInfo",  { sp=C.blue, undercurl=true })
   hl(0, "DiagnosticUnderlineHint",  { sp=C.cyan, undercurl=true })
 
-  -- Treesitter-Links → gleiche Farben auch ohne extra Theme
+  -- Treesitter links so highlighting is consistent without an external colorscheme
   local ts_links = {
     ["@comment"]           = "Comment",
     ["@string"]            = "String",
@@ -128,7 +128,7 @@ local function apply_colors()
 end
 apply_colors()
 
--- ---------- lazy.nvim bootstrap ----------
+-- ---------- lazy.nvim Bootstrap ----------
 local lazypath = vim.fn.stdpath("data").."/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({ "git", "clone", "--filter=blob:none",
@@ -136,6 +136,7 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- ---------- Plugin Setup ----------
 require("lazy").setup({
   -- Completion
   { "hrsh7th/nvim-cmp",
@@ -189,16 +190,16 @@ require("lazy").setup({
     end
   },
 
-  -- Statusline mit Mode-Farben (Normal=Orange, Insert=Grün, Visual=Pink, Command/Replace=Rot)
+  -- Statusline with mode-dependent colors
   { "nvim-lualine/lualine.nvim",
     config = function()
       local theme = {
-        normal  = { a = { fg="#000000", bg=C.orange, gui="bold" }, c = { fg=C.fg, bg=C.bg2 } },
-        insert  = { a = { fg="#000000", bg=C.green , gui="bold" } },
-        visual  = { a = { fg="#000000", bg=C.pink  , gui="bold" } },
-        replace = { a = { fg="#000000", bg=C.red   , gui="bold" } },
-        command = { a = { fg="#000000", bg=C.red   , gui="bold" } },
-        inactive= { a = { fg=C.fg, bg=C.dim }, c = { fg="#9e9e9e", bg=C.dim } },
+        normal   = { a = { fg="#000000", bg=C.orange, gui="bold" }, c = { fg=C.fg, bg=C.bg2 } },
+        insert   = { a = { fg="#000000", bg=C.green , gui="bold" } },
+        visual   = { a = { fg="#000000", bg=C.pink  , gui="bold" } },
+        replace  = { a = { fg="#000000", bg=C.red   , gui="bold" } },
+        command  = { a = { fg="#000000", bg=C.red   , gui="bold" } },
+        inactive = { a = { fg=C.fg, bg=C.dim }, c = { fg="#9e9e9e", bg=C.dim } },
       }
       require("lualine").setup({
         options = {
@@ -208,12 +209,12 @@ require("lazy").setup({
           component_separators = "",
         },
         sections = {
-          lualine_a = {"mode"},
-          lualine_b = {"branch"},
-          lualine_c = {{ "filename", path = 1 }},
-          lualine_x = {"encoding","fileformat","filetype"},
-          lualine_y = {"progress"},
-          lualine_z = {"location"},
+          lualine_a = { "mode" },
+          lualine_b = { "branch" },
+          lualine_c = { { "filename", path = 1 } },
+          lualine_x = { "encoding", "fileformat", "filetype" },
+          lualine_y = { "progress" },
+          lualine_z = { "location" },
         },
       })
     end
@@ -222,10 +223,10 @@ require("lazy").setup({
   ui = { border = "rounded" }
 })
 
--- Farben neu anwenden, falls ein externes Colorscheme geladen wird
+-- Reapply our colors if another colorscheme loads later.
 vim.api.nvim_create_autocmd("ColorScheme", { callback = apply_colors })
 
--- :w!!  -> speichert die aktuelle Datei per sudo
+-- Write current file with sudo by using :SudoWrite or w!!
 vim.api.nvim_create_user_command('SudoWrite', function()
   vim.cmd('write !sudo tee % > /dev/null')
   vim.cmd('edit!')
