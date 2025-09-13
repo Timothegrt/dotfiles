@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -u
+
+# ----------------------------------------------------------------------------
+# USB sound monitor: plays add/remove sounds for physical USB device events.
+#
+# Environment overrides:
+#   SND_ADD  (default: device-added)   # Sound when USB device added
+#   SND_REM  (default: device-removed) # Sound when USB device removed
+#
+# Looks for themed sounds in macOS-ish theme, then falls back to freedesktop.
+# ----------------------------------------------------------------------------
+
+# Sound names from your theme (macOS-ish) – located under stereo/*.ogg
+SND_ADD=${SND_ADD:-device-added}
+SND_REM=${SND_REM:-device-removed}
+
+play() {
+  local name="$1"
+  # 1) Play themed event sound via canberra-gtk-play
+  canberra-gtk-play -i "$name" >/dev/null 2>&1 && return 0
+  # 2) Fallback direct playback (first your theme, then freedesktop)
+  pw-play "$HOME/.local/share/sounds/macOS-ish/stereo/$name.ogg" >/dev/null 2>&1 && return 0
+  pw-play "/usr/share/sounds/freedesktop/stereo/$name.oga" >/dev/null 2>&1 || true
+}
+
+ACTION=""; DEVTYPE=""
+# Listen to UDEV events for subsystem "usb" and use env variables per event
+stdbuf -oL udevadm monitor --udev --environment --subsystem-match=usb | \
+while IFS= read -r line; do
+  # Empty line = end of one event -> evaluate
+  if [[ -z "$line" ]]; then
+    if [[ "$DEVTYPE" == "usb_device" ]]; then
+      case "$ACTION" in
+        add)    play "$SND_ADD" ;;
+        remove) play "$SND_REM" ;;
+      esac
+    fi
+    ACTION=""; DEVTYPE=""
+    continue
+  fi
+  case "$line" in
+    ACTION=*)  ACTION="${line#ACTION=}" ;;
+  DEVTYPE=*) DEVTYPE="${line#DEVTYPE=}" ;;  # usb_device / usb_interface …
+  esac
+done

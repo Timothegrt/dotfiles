@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -u
+
+# ----------------------------------------------------------------------------
+# Sound event daemon: plays short canberra sounds on hardware events.
+# Events: AC plug/unplug, low battery (<=15% & discharging), USB add/remove.
+# Run: execute script (monitors background then waits). Requires canberra-gtk-play, dbus-monitor, awk, stdbuf.
+# ----------------------------------------------------------------------------
+
+play() { canberra-gtk-play -i "$1" >/dev/null 2>&1 & }
+
+monitor_ac() {
+  local last=""
+  while :; do
+    local online=""
+    for f in /sys/class/power_supply/*/online; do
+      [ -r "$f" ] || continue
+      read -r v < "$f"
+      if [ "$v" = "1" ]; then online=1; break; fi
+    done
+    if [ -n "$last" ] && [ "${online:-0}" != "$last" ]; then
+      [ "${online:-0}" = "1" ] && play power-plug || play power-unplug
+    fi
+    last="${online:-0}"
+    sleep 2
+  done
+}
+
+monitor_battery() {
+  local warned=0
+  while :; do
+    local cap stat
+    cap="$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1 || echo)"
+    stat="$(cat /sys/class/power_supply/BAT*/status   2>/dev/null | head -n1 || echo)"
+    if [ -n "$cap" ] && [ "$stat" = "Discharging" ] && [ "$cap" -le 15 ]; then
+      if [ $warned -eq 0 ]; then play battery-low; warned=1; fi
+    else
+      warned=0
+    fi
+    sleep 60
+  done
+}
+
+monitor_usb() {
+  # Observe UDisks2 signals (works without root)
+  dbus-monitor --system "type='signal',sender='org.freedesktop.UDisks2',interface='org.freedesktop.DBus.ObjectManager'" \
+  | stdbuf -oL awk '
+      /InterfacesAdded/   { system("canberra-gtk-play -i device-added >/dev/null 2>&1 &") }
+      /InterfacesRemoved/ { system("canberra-gtk-play -i device-removed >/dev/null 2>&1 &") }'
+}
+
+monitor_ac   &
+monitor_battery &
+monitor_usb  &
+wait
+

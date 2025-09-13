@@ -7,3 +7,25 @@ Thumbs.db
 .cache/
 __pycache__/
 *.swp
+
+.ssh/
+.gnupg/
+.password-store/
+.local/share/keyrings/
+.config/protonmail/
+.config/gh/hosts.yml
+.git-credentials
+.netrc
+.aws/
+.config/gcloud/
+.kube/
+.docker/config.json
+.npmrc
+.pypirc
+.direnv/
+.env
+*.env
+*.env.local
+*.secret*
+host-*/  machine-*/  private-*/
+

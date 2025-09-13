@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Auto-switch powerprofilesctl profile based on AC/Battery status.
+# Environment overrides:
+#   AC_PROFILE  (default: balanced)     # e.g. performance|balanced
+#   BAT_PROFILE (default: power-saver)  # usually power-saver
+
+AC_PROFILE="${AC_PROFILE:-balanced}"       # e.g. performance|balanced
+BAT_PROFILE="${BAT_PROFILE:-power-saver}"  # usually power-saver
+PPCTL="$(command -v powerprofilesctl || true)"
+
+log(){ printf '[pp-auto] %s\n' "$*" >&2; }
+
+[[ -n "$PPCTL" ]] || { log "powerprofilesctl not found"; exit 1; }
+
+# Avoid conflict with TLP (power-profiles-daemon incompatible)
+if systemctl is-active --quiet tlp.service 2>/dev/null; then
+  log "TLP active – exiting to avoid conflict"; exit 0
+fi
+
+wait_upower() {
+  # Wait until upower D-Bus is ready
+  for _ in {1..20}; do upower -e &>/dev/null && return 0; sleep 0.5; done
+  log "upower not ready"; exit 1
+}
+get_display(){ upower -e | awk '/DisplayDevice/{print; exit}'; }
+
+set_profile(){
+  local target="$1" cur
+  cur="$( $PPCTL get 2>/dev/null || true)"
+  [[ "$cur" == "$target" ]] && { log "profile unchanged ($cur)"; return 0; }
+  if $PPCTL set "$target" 2>/dev/null; then
+  log "profile -> $target"
+  else
+  log "setting profile failed (polkit agent running?)"
+  fi
+}
+
+apply_state(){
+  local onbat="$1"
+  # on-battery: yes -> battery profile, no -> AC profile
+  if [[ "$onbat" == "yes" ]]; then set_profile "$BAT_PROFILE"
+  else                              set_profile "$AC_PROFILE"
+  fi
+}
+
+wait_upower
+# Apply initial state once
+state="$(upower -i "$(get_display)" | awk -F': *' '/on-battery/{print $2}')"
+[[ -n "${state:-}" ]] && apply_state "$state"
+
+# Monitor events
+upower --monitor-detail | while IFS= read -r line; do
+  case "$line" in
+    *"on-battery:"*)
+      s="${line##*: }"; s="${s// /}"
+      apply_state "$s"
+    ;;
+  esac
+done
