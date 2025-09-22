@@ -7,6 +7,11 @@ Includes configs for **sway**, **waybar**, **wofi**, **wlogout**, **Neovim**, **
 
 ![Terminal](screenshots/image-terminal.png)
 
+![Vim Normal](screenshots/image-normal.png)
+
+![Vim Visual](screenshots/image-visual.png)
+
+![Btop](screenshots/image-btop.png)
 ---
 
 ## What’s inside
