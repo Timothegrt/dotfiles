@@ -47,7 +47,7 @@ r() {
 ### Julia (managed by juliaup) ##################################################
 # >>> juliaup initialize >>>
 # !! Contents within this block are managed by juliaup !!
-path=('/home/tim/.juliaup/bin' $path)
+path=("$HOME/.juliaup/bin" $path)
 export PATH
 # <<< juliaup initialize <<<
 
@@ -66,15 +66,6 @@ export EDITOR=nvim
 export VISUAL=nvim
 
 ### Custom tooling paths / commands #############################################
-export CHEATDIR="$HOME/Documents/Cheatsheets"
-export EDITOR_CMD="nvim"
-export TERMINAL_CMD="kitty"
-export CHEATDIR="$HOME/Documents/Cheatsheets"
-export EDITOR_CMD="nvim"
-export TERMINAL_CMD="kitty"
-export CHEATDIR="$HOME/Documents/Cheatsheets"
-export EDITOR_CMD="nvim"
-export TERMINAL_CMD="kitty"
 export CHEATDIR="$HOME/Documents/Cheatsheets"
 export EDITOR_CMD="nvim"
 export TERMINAL_CMD="kitty"
