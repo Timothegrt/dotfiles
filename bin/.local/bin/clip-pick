@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-choice=$(cliphist list | { command -v rofi &>/dev/null \
-  && rofi -dmenu -p "Clipboard" \
-  || wofi --dmenu -p "Clipboard"; } || true)
-[ -z "${choice:-}" ] && exit 0
-
-printf '%s\n' "$choice" | cliphist decode | wl-copy
